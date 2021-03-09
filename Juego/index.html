@@ -11,19 +11,39 @@
 </head>
 
 <body>
+    <audio class="soundHover" src="/Hover.mp3"></audio>
+    <audio class="soundTransition" src="/Transition.mp3"></audio>
+    <audio class="soundTranReverse" src="/Transition_reverse.mp3"></audio>
 
     <div class="estrellas"></div>
     <div class="brillando"></div>
     <div class="nubes"></div>
 
+    <!-- <nav class="navbar navbar-expand-lg">
+        <div class="container-fluid">
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+                data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false"
+                aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                    <li class="nav-item">
+                        <a class="nav-link active" aria-current="page" href="#">Home</a>
+                    </li>
+            </div>
+        </div>
+    </nav> -->
+
     <section class="menu" id="menu">
         <div class="container d-flex">
             <div class="row col-lg-6 align-items-center p-2">
-                <button type="button" class="btn mb-2" id="btnPlay">Play</button>
-                <button type="button" class="btn mb-2" id="btnTwoPlayers">Two Players</button>
-                <button type="button" class="btn mb-2" id="btnOnline">Online</button>
-                <button type="button" class="btn mb-2" id="btnSettings">Settings</button>
-                <audio class="soundHover" src="/Hover.mp3"></audio>
+                <button type="button" class="btn btn-menu mb-2" id="btnPlay">Play</button>
+                <button type="button" class="btn btn-menu mb-2" id="btnTwoPlayers">Two Players</button>
+                <button type="button" class="btn btn-menu mb-2" id="btnOnline" data-bs-toggle="modal"
+                    data-bs-target="#OnlineModal">Online</button>
+                <button type="button" class="btn btn-menu mb-2" id="btnSettings" data-bs-toggle="modal"
+                    data-bs-target="#SettingsModal">Settings</button>
             </div>
             <div class="row my-auto mx-auto">
                 <h1 class="titulo">Abducted</h1>
@@ -31,6 +51,52 @@
         </div>
     </section>
 
+
+
+    <div class="modal modal-online fade" id="OnlineModal" tabindex="-1" aria-labelledby="OnlineModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header text-center">
+                    <h1 class="modal-title" id="OnlineModalLabel">Online</h1>
+                </div>
+                <div class="modal-body">
+                    <form>
+                        <div class="mb-3">
+                            <label for="recipient-name" class="col-form-label">Nickname:</label>
+                            <input type="text" class="form-control" id="recipient-name">
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-online mx-auto" id="btnOnlinePlay">Play</button>
+                    <button type="button" class="btn btn-online btn-reverse mx-auto" id="btnClose"
+                        data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal modal-settings fade" id="SettingsModal" tabindex="-1" aria-labelledby="SettingsModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header text-center">
+                    <h1 class="modal-title" id="SettingsModalLabel">Settings</h1>
+                </div>
+                <div class="modal-body">
+
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-online mx-auto" id="btnSave">Save</button>
+                    <button type="button" class="btn btn-online btn-reverse mx-auto" id="btnClose"
+                        data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+   
 
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta2/dist/js/bootstrap.bundle.min.js"></script>

@@ -62,6 +62,11 @@ body {
     }
 }
 
+.navbar {
+    z-index: 1;
+    position: absolute;
+}
+
 .menu,
 .container {
     z-index: 3;
@@ -86,14 +91,14 @@ body {
     font-family: sans-serif;
     color: #008000;
     border: 2px solid #39ff14;
-    box-shadow: 0 0 40px #39ff14;
+    box-shadow: 0 0 20px #39ff14;
     transform: scale(1.1);
 }
 
-.btn::selection {
+.btn:focus {
     color: #008000;
     border: 2px solid #39ff14;
-    box-shadow: 0 0 40px #39ff14;
+    box-shadow: 0 0 20px #39ff14;
 }
 
 h1 {
@@ -103,10 +108,52 @@ h1 {
     font-size: 80px;
     color: #fff;
     text-align: center;
-    text-shadow: 0 0 5px white, 0 0 10px white, 0 0 15px #39ff14, 0 0 20px #39ff14, 0 0 25px #39ff14, 0 0 30px #39ff14, 0 0 35px #39ff14;
+    text-shadow: 0 0 1px white, 0 0 5px white, 0 0 7.5px #39ff14, 0 0 10px #39ff14, 0 0 12.5px #39ff14, 0 0 15px #39ff14, 0 0 17.5px #39ff14;
     transition: all 1.0s ease;
 }
 
 h1:hover {
     font-family: sans-serif;
+}
+
+.modal {
+    backdrop-filter: blur(20px);
+}
+
+.modal-content {
+    border-radius: 20px;
+    background-color: transparent;
+    box-shadow: 0 0 20px #39ff14;
+}
+
+.modal-header {
+    display: block;
+    border-bottom: none
+}
+
+.col-form-label {
+    color: grey;
+}
+
+.form-control {
+    border-radius: 20px;
+    background: transparent;
+    color: #ffffff;
+    border: 1px solid grey;
+}
+
+.form-control:focus {
+    background: transparent;
+    box-shadow: 0 0 10px #39ff14;
+}
+
+.modal-footer {
+    border-top: none;
+}
+
+
+.modal-pause .modal-content {
+    border-radius: 20px;
+    background-color: transparent;
+    box-shadow: none;
 }
