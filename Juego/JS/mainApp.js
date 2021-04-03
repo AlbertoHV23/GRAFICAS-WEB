@@ -29,23 +29,26 @@ $(document).ready(function () {
         beepTranReverse.play();
     });
 
-
     $("#btnSolo").click(function () {
         $(".menu").remove();
         $(".estrellas").remove();
         $(".brillando").remove();
         $(".nubes").remove();
         $(".navbar").show();
+        $(".d-none").removeClass();
         IntiGame();
     });
 
 });
 
 function IntiGame() {
+    const canvas = document.querySelector('#pantalla');
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
 
     const renderer = new THREE.WebGLRenderer({
+        canvas
+    }, {
         antialias: true
     });
     renderer.setSize(window.innerWidth, window.innerHeight);
@@ -63,35 +66,10 @@ function IntiGame() {
     $(document).on('keydown', function (event) {
         if (event.key == "Escape") {
             beepTransition.play();
-            modalWrap = document.createElement('div');
-            modalWrap.innerHTML = `
-                <div class="modal modal-pause fade" id="PauseModal" tabindex="-1" aria-labelledby="PauseModalLabel" aria-hidden="true">
-                    <div class="modal-dialog">
-                        <div class="modal-header">
-                            <h1 class="modal-title" id="PauseModalLabel">Pause</h1>
-                        </div>
-                        <div class="modal-content">
-                        <div class="modal-body">
-                            <div class="row">
-                                <button type="button" class="btn btn-online btn-reverse mb-4" data-bs-dismiss="modal">Resume</button>
-                            </div>
-                            <div class="row">
-                                <button type="button" class="btn btn-menu mb-4" id="btnSettings">Settings</button>
-                            </div>
-                            <div class="row">
-                            <button type="button" class="btn btn-menu mb-4" id="btnLeave">Leave</button>
-                            </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>`;
-            document.body.append(modalWrap);
-            var modal = new bootstrap.Modal(modalWrap.querySelector('.modal-pause'));
-            modal.show();
-        } else if (modalWrap !== null) {
-            modalWrap.remove();
+            $('#PauseModal').modal('show');
+        } else {
+            $('#PauseModal').modal('hide');
         }
-
     });
 
     animate();
@@ -105,13 +83,10 @@ function IntiGame() {
     }
 
     function onWindowResize() {
-        // Camera frustum aspect ratio
         camera.aspect = window.innerWidth / window.innerHeight;
-        // After making changes to aspect
         camera.updateProjectionMatrix();
-        // Reset size
         renderer.setSize(window.innerWidth, window.innerHeight);
     }
-    
+
     window.addEventListener('resize', onWindowResize, false);
 }
