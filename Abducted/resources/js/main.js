@@ -1,9 +1,3 @@
-import * as THREE from '/resources/js/libs/three.module.js';
-// //Mover la cámara con el ratón utilizando click derecho e izquierdo
-import {
-  OrbitControls
-} from '/resources/js/libs/OrbitControls.js';
-
 var beepHover = $(".soundHover")[0];
 var beepTransition = $(".soundTransition")[0];
 var beepTranReverse = $(".soundTranReverse")[0];
@@ -22,19 +16,19 @@ $(document).ready(function () {
       sound = false;
     }
   });
-  
+
   $(".btn").hover(function () {
     beepHover.play();
   }, function () {});
-  
+
   $(".btn-menu").click(function (e) {
     beepTransition.play();
   });
-  
+
   $(".btn-reverse").click(function (e) {
     beepTranReverse.play();
   });
-  
+
   $("#btnSolo").click(function () {
     $(".menu").remove();
     $(".estrellas").remove();
@@ -42,124 +36,174 @@ $(document).ready(function () {
     $(".nubes").remove();
     $(".navbar").show();
     $(".d-none").removeClass();
-    Mundo = new BasicWorld();
+    init();
   });
 
 });
 
-class BasicWorld {
-  constructor() {
-    this._Initialize();
+// Variables globales
+var scene
+var renderer
+var camera
+
+var clock
+var delta
+
+var keys = {}
+
+function init() {
+
+  clock = new THREE.Clock()
+
+  // Tamano del canvas
+  var canvasSize = {
+    width: window.innerWidth,
+    height: window.innerHeight
   }
 
-  _Initialize() {
-    const canvas = document.querySelector('#pantalla');
+  // Inicializar el renderer
+  renderer = new THREE.WebGLRenderer()
 
-    this._threejs = new THREE.WebGLRenderer({
-      canvas,
-      antialias: true,
-    });
-    this._threejs.shadowMap.enabled = true;
-    this._threejs.shadowMap.type = THREE.PCFSoftShadowMap;
-    this._threejs.setPixelRatio(window.devicePixelRatio);
-    this._threejs.setSize(window.innerWidth, window.innerHeight);
+  //Limpiamos la pantalla
+  renderer.setClearColor(new THREE.Color(0, 0, 0))
+  renderer.setSize(
+    canvasSize.width,
+    canvasSize.height
+  )
 
-    // document.body.appendChild(this._threejs.domElement);
+  // Inicializar la camara
+  camera = new THREE.PerspectiveCamera(
+    //Campo de vision
+    75,
+    //Relacion aspecto
+    canvasSize.width / canvasSize.height,
+    //Que tan cerca se va a ver
+    0.1,
+    // Que tan lejos se va a ver
+    500
+  )
 
-    window.addEventListener('resize', () => {
-      this._OnWindowResize();
-    }, false);
+  camera.position.set(0,20,55);
 
-    const fov = 60;
-    const aspect = 1920 / 1080;
-    const near = 1.0;
-    const far = 1000.0;
-    this._camera = new THREE.PerspectiveCamera(fov, aspect, near, far);
-    this._camera.position.set(75, 20, 0);
+  // Inicializamos la escena
+  scene = new THREE.Scene()
 
-    this._scene = new THREE.Scene();
+  // Agregamos la etiquetada canvas dentro del Div
+  $('#scene-section').append(renderer.domElement)
 
-    let light = new THREE.DirectionalLight(0xFFFFFF, 1.0);
-    light.position.set(20, 100, 10);
-    light.target.position.set(0, 0, 0);
-    light.castShadow = true;
-    light.shadow.bias = -0.001;
-    light.shadow.mapSize.width = 2048;
-    light.shadow.mapSize.height = 2048;
-    light.shadow.camera.near = 0.1;
-    light.shadow.camera.far = 500.0;
-    light.shadow.camera.near = 0.5;
-    light.shadow.camera.far = 500.0;
-    light.shadow.camera.left = 100;
-    light.shadow.camera.right = -100;
-    light.shadow.camera.top = 100;
-    light.shadow.camera.bottom = -100;
-    this._scene.add(light);
+  // Iluminacion
+  var ambient = new THREE.AmbientLight(
+    // Color
+    new THREE.Color(1, 1, 1),
+    // intensidad
+    1.0
+  )
 
-    light = new THREE.AmbientLight(0x101010);
-    this._scene.add(light);
+  var directional = new THREE.DirectionalLight(
+    // Color
+    new THREE.Color(1, 1, 0),
+    // intensidad
+    0.4
+  )
 
-    const controls = new OrbitControls(
-      this._camera, canvas);
-    controls.target.set(0, 20, 0);
-    controls.update();
+  // Posicion de la luz direccional
+  directional.position.set(0, 0, 1)
 
-    const loader = new THREE.CubeTextureLoader();
-    const texture = loader.load([
-      './resources/skybox/night/front.png',
-      './resources/skybox/night/back.png',
-      './resources/skybox/night/top.png',
-      './resources/skybox/night/bottom.png',
-      './resources/skybox/night/left.png',
-      './resources/skybox/night/right.png',
-    ]);
-    this._scene.background = texture;
+  // Ambos tipos de iluminacion se agregan a la escena
+  scene.add(ambient)
+  scene.add(directional)
 
-    const plane = new THREE.Mesh(
-      new THREE.PlaneGeometry(500, 500, 10, 10),
-      new THREE.MeshStandardMaterial({
-        color: 0xFFFFFF,
-      }));
-    plane.castShadow = false;
-    plane.receiveShadow = true;
-    plane.rotation.x = -Math.PI / 2;
-    this._scene.add(plane);
+  // Dibujamos un grid
+  var grid = new THREE.GridHelper(50, 10, 0xffffff, 0xffffff);
+  grid.position.y = -1;
+  scene.add(grid);
 
-    const box = new THREE.Mesh(
-      new THREE.SphereGeometry(2, 32, 32),
-      new THREE.MeshStandardMaterial({
-        color: 0xFFFFFF,
-        wireframe: true,
-        wireframeLinewidth: 4,
-      }));
-    box.position.set(0, 10, 0);
-    box.castShadow = true;
-    box.receiveShadow = true;
-    this._scene.add(box);
+  document.addEventListener('keydown', onKeyDown);
+  document.addEventListener('keyup', onKeyUp);
 
-    $(document).on('keydown', function (event) {
-      if (event.key == "Escape") {
-        beepTransition.play();
-        $('#PauseModal').modal('show');
-      } else {
-        $('#PauseModal').modal('hide');
-      }
-    });
+  //Carga de obj
+  loadOBJWithMTL(
+    //Carpeta donde esta el modelo,
+    'resources/assets/UFO/',
+    // El archivo obj del modelo
+    'Low_poly_UFO.obj',
+    // El archivo mtl
+    'Low_poly_UFO.mtl',
+    (miObjetoYaCargado) => {
+      // Posicion del objeto en x y z
+      miObjetoYaCargado.position.z = 0
+      miObjetoYaCargado.position.x = 0
+      miObjetoYaCargado.position.y = 0
+      // Escala del objeto en x y z
+      miObjetoYaCargado.scale.set(.15, .15, .15)
+      // Nombre del objeto
+      miObjetoYaCargado.name = 'UFO'
+      miObjetoYaCargado.add(camera)
+      scene.add(miObjetoYaCargado)
+    }
+  )
+  // Mandamos llamar la funcion render
+  render()
+}
 
-    this._RAF();
+function render() {
+
+  // Se llama arias veces (update)
+  requestAnimationFrame(render)
+
+  delta = clock.getDelta()
+
+  var yaw = 0;
+  var forward = 0;
+  var updown = 0;
+
+  if (keys["A"]) {
+    yaw = 5;
+  } else if (keys["D"]) {
+    yaw = -5;
+  }
+  if (keys["W"]) {
+    forward = -20;
+  } else if (keys["S"]) {
+    forward = 20;
+  }
+  if (keys["Q"]) {
+    updown = 5;
+  } else if (keys["E"]) {
+    updown = -5;
   }
 
-  _OnWindowResize() {
-    this._camera.aspect = window.innerWidth / window.innerHeight;
-    this._camera.updateProjectionMatrix();
-    this._threejs.setSize(window.innerWidth, window.innerHeight);
-  }
 
-  _RAF() {
-    requestAnimationFrame(() => {
-      this._threejs.render(this._scene, this._camera);
-      this._RAF();
-    });
-  }
+  var UFO = scene.getObjectByName("UFO");
+  UFO.rotation.y += yaw * delta
+  UFO.translateZ(forward * delta)
 
+  // camera.rotation.y += yaw * delta;
+  // camera.translateZ(forward * delta);
+  // camera.translateY(updown * delta);
+
+  // Recibe como parametro que escena va a dibujar, y la camara que se va a utilizar
+  renderer.render(scene, camera)
+}
+
+function onKeyDown(event) {
+  keys[String.fromCharCode(event.keyCode)] = true;
+}
+
+function onKeyUp(event) {
+  keys[String.fromCharCode(event.keyCode)] = false;
+}
+
+function loadOBJWithMTL(path, objFile, mtlFile, onLoadCallback) {
+  var mtlLoader = new THREE.MTLLoader()
+  mtlLoader.setPath(path)
+
+  mtlLoader.load(mtlFile, (material) => {
+    var objLoader = new THREE.OBJLoader()
+    objLoader.setPath(path)
+    objLoader.setMaterials(material)
+    objLoader.load(objFile, (object3d) => {
+      onLoadCallback(object3d)
+    })
+  })
 }
