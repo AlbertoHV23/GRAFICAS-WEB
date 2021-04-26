@@ -1,8 +1,8 @@
-import * as THREE from '/resources/js/three.module.js';
+import * as THREE from '/resources/js/libs/three.module.js';
 // //Mover la cámara con el ratón utilizando click derecho e izquierdo
 import {
   OrbitControls
-} from '/resources/js/OrbitControls.js';
+} from '/resources/js/libs/OrbitControls.js';
 
 var beepHover = $(".soundHover")[0];
 var beepTransition = $(".soundTransition")[0];
