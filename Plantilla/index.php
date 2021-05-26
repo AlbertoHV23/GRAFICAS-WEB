@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 
@@ -9,7 +10,7 @@
 	<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta2/dist/css/bootstrap.min.css" rel="stylesheet">
 	<!-- FontAwesome CSS -->
 	<link rel="stylesheet" href="https://pro.fontawesome.com/releases/v5.10.0/css/all.css" />
-	<link rel="stylesheet" href="/assets/css/style.css">
+	<link rel="stylesheet" href="./assets/css/style.css">
 	<title>Abducted</title>
 </head>
 
@@ -23,16 +24,16 @@
 		<div class="datos d-none">
 			<div class="datosUno">
 				<h2 class="titulo-playerUno">Gerax</h1>
-				<h2 class="titulo-playerUnoPuntos">Puntos: 0</h1>
+					<h2 class="titulo-playerUnoPuntos">Puntos: 0</h1>
 			</div>
 
 			<div class="datosDos">
 				<h2 class="titulo-vivos">Alive: 0</h1>
 			</div>
-		
+
 			<div class="datosDos">
 				<h2 class="titulo-playerDos">Player2</h1>
-				<h2 class="titulo-playerDosPuntos">Puntos: 0</h1>
+					<h2 class="titulo-playerDosPuntos">Puntos: 0</h1>
 			</div>
 		</div>
 
@@ -90,8 +91,8 @@
 								data-bs-target="#singleInputModal">Solo</button>
 						</div>
 						<div class="row">
-							<button type="button" class="btn btn-menu mb-2" id="btnMultiplayer"data-bs-toggle="modal"
-							data-bs-target="#multiplayerInputModal">Multiplayer</button>
+							<button type="button" class="btn btn-menu mb-2" id="btnMultiplayer" data-bs-toggle="modal"
+								data-bs-target="#multiplayerInputModal">Multiplayer</button>
 						</div>
 						<!-- <div class="row">
 							<button type="button" class="btn btn-menu mb-2" id="btnOnline" data-bs-toggle="modal"
@@ -145,7 +146,8 @@
 				<div class="modal-body">
 					<div class="mb-3">
 						<label for="recipient-name" class="col-form-label">Nickname:</label>
-						<input type="text" class="form-control" id="nicknameSingleInput" name="nicknameSingleInput" placeholder="Nickname">
+						<input type="text" class="form-control" id="nicknameSingleInput" name="nicknameSingleInput"
+							placeholder="Nickname">
 					</div>
 					<select name="selectEscenario" id="selectEscenario">
 						<option value="0">FARM</option>
@@ -175,11 +177,13 @@
 				<div class="modal-body">
 					<div class="mb-3">
 						<label for="playerOneName" class="col-form-label">Nickname P1:</label>
-						<input type="text" class="form-control" id="playerOneName" name="playerOneName" placeholder="Nickname">
+						<input type="text" class="form-control" id="playerOneName" name="playerOneName"
+							placeholder="Nickname">
 					</div>
 					<div class="mb-3">
 						<label for="playerTwoName" class="col-form-label">Nickname P2:</label>
-						<input type="text" class="form-control" id="playerTwoName" name="playerTwoName" placeholder="Nickname">
+						<input type="text" class="form-control" id="playerTwoName" name="playerTwoName"
+							placeholder="Nickname">
 					</div>
 				</div>
 				<div class="modal-footer">
@@ -414,12 +418,6 @@
 			</div>
 		</div>
 	</div>
-
-
-
-
-
-	
 
 	<!-- Bootstrap JS -->
 	<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta2/dist/js/bootstrap.bundle.min.js"></script>

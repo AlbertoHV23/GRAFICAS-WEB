@@ -23,12 +23,12 @@ var cameraRayo
 var scene;
 var controls;
 var clock;
-var raycaster;
+var raycastera;
 var deltaTime;
 var keys = {};
 
 var contador = 1
-
+var colisionado = false
 var twoPlayers = false;
 var selectStage = 1;
 var selectTexture = 2;
@@ -41,6 +41,8 @@ var puntosUno = 0;
 var puntosDos = 0;
 var puntosTres = 0;
 var simon = true
+var ganoUno = true
+
 
 var arregloPersonas = []
 
@@ -192,7 +194,6 @@ $(document).ready(function () {
 });
 
 function cargarModelos() {
-
     if (selectStage == 1) {
         cargaObj("assets/models/escenario/nuclear/", "10078_Nuclear_Power_Plant_v1_L3.obj", "10078_Nuclear_Power_Plant_v1_L3.mtl", (miModelo) => {
             miModelo.position.set(0, -1, 0);
@@ -287,6 +288,8 @@ function cargaModelosAnimados() {
 
         personaje.position.z = Math.floor(Math.random() * -176) - 100
         personaje.position.x = Math.floor(Math.random() * -72) + 150
+        // personaje.position.z= 70
+        // personaje.position.x= -25
         personaje.position.y = 0
 
         console.log(personaje.position.z + ' original');
@@ -301,7 +304,7 @@ function cargaModelosAnimados() {
         scene.add(personaje)
         copiados.push(personaje);
 
-        if (contador >= 5) {
+        if (contador >= 3) {
             modelos[3] = true;
         }
 
@@ -405,20 +408,21 @@ function render() {
     if (keys["V"]) {
         cone.visible = true;
     } else {
+        colisionado = true
         cone.visible = false;
     }
 
-    if (keys["Z"]) {
-        puntosUno += 1;
-        $(".titulo-playerUnoPuntos").empty();
-        $(".titulo-playerUnoPuntos").html('Puntos: ' + puntosUno);
-    }
+    // if (keys["Z"]) {
+    //     puntosUno += 1;
+    //     $(".titulo-playerUnoPuntos").empty();
+    //     $(".titulo-playerUnoPuntos").html('Puntos: ' + puntosUno);
+    // }
 
-    if (keys["X"]) {
-        puntosDos += 1;
-        $(".titulo-playerDosPuntos").empty();
-        $(".titulo-playerDosPuntos").html('Puntos: ' + puntosDos);
-    }
+    // if (keys["X"]) {
+    //     puntosDos += 1;
+    //     $(".titulo-playerDosPuntos").empty();
+    //     $(".titulo-playerDosPuntos").html('Puntos: ' + puntosDos);
+    // }
 
 
     var yaw2 = 0;
@@ -470,6 +474,7 @@ function render() {
         if (keys["O"]) {
             cone2.visible = true;
         } else {
+            colisionado = true
             cone2.visible = false;
         }
 
@@ -493,7 +498,7 @@ function render() {
     $(".titulo-vivos").html('Alive: ' + copiados.length);
     copiados.forEach(personas => {
         var perona = scene.getObjectByName(personas.name)
-        // perona.position.z += 4 * deltaTime;
+        perona.position.z += 4 * deltaTime;
 
         if (perona.position.z >= 50) {
             scene.remove(perona)
@@ -504,6 +509,42 @@ function render() {
             puntosTres++
         }
 
+        if (((perona.position.x > ufos[0].position.x - 2.5 && perona.position.x < ufos[0].position.x + 1.5) && (perona.position.z > ufos[0].position.z - 1.5 && perona.position.z < ufos[0].position.z + 1.5)) && cone.visible) {
+            scene.remove(perona)
+            var indice = copiados.indexOf(perona); // obtenemos el indice
+            copiados.splice(indice, 1);
+            $(".titulo-vivos").html('Alive: ' + copiados.length);
+
+
+            if (colisionado) {
+                puntosUno += 1
+                localStorage.setItem('puntosUnoS', puntosUno);
+                colisionado = false
+            }
+        }
+        $(".titulo-playerUnoPuntos").empty();
+        $(".titulo-playerUnoPuntos").html('Puntos: ' + puntosUno);
+
+        if (twoPlayers) {
+            if (((perona.position.x > ufos[1].position.x - 2.5 && perona.position.x < ufos[1].position.x + 1.5) && (perona.position.z > ufos[1].position.z - 1.5 && perona.position.z < ufos[1].position.z + 1.5)) && cone2.visible) {
+                console.log('Colsion')
+                scene.remove(perona)
+                var indice = copiados.indexOf(perona); // obtenemos el indice
+                copiados.splice(indice, 1);
+                $(".titulo-vivos").html('Alive: ' + copiados.length);
+
+
+                if (colisionado) {
+                    puntosDos += 1;
+                    localStorage.setItem('puntosDosS', puntosDos);
+                    colisionado = false
+                }
+
+            }
+        }
+        $(".titulo-playerDosPuntos").empty();
+        $(".titulo-playerDosPuntos").html('Puntos: ' + puntosDos);
+
     });
 
     // persona.position.z += 0.03;
@@ -513,8 +554,7 @@ function render() {
     // camera.translateY(up * deltaTime);
 
     for (let index = 0; index < renders.length; index++) {
-        // renders[index].render(scene, cameras[index]);
-        renders[index].render(scene, cameraRayo);
+        renders[index].render(scene, cameras[index]);
     }
 
     if (twoPlayers) {
@@ -535,29 +575,28 @@ function render() {
         //mandar datos de firebase
         confirm("Game Over")
         location.reload()
-    } else if (twoPlayers == true && modelos[3]) {
-        if (copiados.length == 0) {
-            confirm("Game Over");
+    } else if ((copiados.length == 0 && twoPlayers == false && modelos[3]) && ganoUno) {
+        ganoUno = false
+        confirm("Gana " + localStorage.getItem('Player1Name'));
+        location.reload()
+    } else if ((twoPlayers == true && modelos[3])) {
+        if ((puntosUno > puntosDos && copiados.length == 0) && ganoUno) {
+            ganoUno = false
+            confirm("Gana " + localStorage.getItem('Player1Name'));
+
+            // mandamos los datos de que tenga mas puntos
+            location.reload()
+        } else if ((puntosDos > puntosUno && copiados.length == 0) && ganoUno) {
+            ganoUno = false
+            confirm("Gana " + localStorage.getItem('Player2Name'));
+            // mandamos los datos de que tenga mas puntos
+            location.reload()
+        } else if (copiados.length == 0 && ganoUno) {
+            ganoUno = false
+            confirm("EMPATE");
             // mandamos los datos de que tenga mas puntos
             location.reload()
         }
-    }
-
-    for (let index = 0; index < cameraRayo.rayos.length; index++) {
-        var rayo = cameraRayo.rayos[index]
-        raycaster.set(cameraRayo.position, rayo)
-
-        var colision = raycaster.intersectObject(
-            copiados,
-            true
-        )
-
-        if (colision.length > 0) {
-            if (colision[0].distance < 5) {
-                console.log('Colision')
-            }
-        }
-
     }
 
 }
@@ -590,7 +629,7 @@ let cloudParticles = [],
 function setupScene() {
 
     clock = new THREE.Clock();
-    raycaster = new THREE.Raycaster()
+    raycastera = new THREE.Raycaster()
     scene = new THREE.Scene();
 
     crearCamara();
@@ -605,12 +644,9 @@ function setupScene() {
 
     const loader = new THREE.CubeTextureLoader();
 
-    $('selectEscenario').change(function (e) {
-        e.preventDefault();
-        if (twoPlayers == false) {
-            selectStage = $('selectEscenario').val();
-        }
-    });
+    if (twoPlayers == false) {
+        selectStage = $('#selectEscenario').val();
+    }
 
     if (selectStage == 1 && twoPlayers) {
         textureStage = loader.load(back_night);
@@ -634,12 +670,12 @@ function setupScene() {
     scene.add(ancla);
 
 
-    cameraRayo = new THREE.PerspectiveCamera(75, visibleSize.width / visibleSize.height, 0.1, 100);
-    cameraRayo.position.set(-25, 3, 70);
-    cameraRayo.rotation.y = THREE.Math.degToRad(180);
-    cameraRayo.rayos = [
-        new THREE.Vector3(0, -1, 0)
-    ]
+    // cameraRayo = new THREE.PerspectiveCamera(75, visibleSize.width / visibleSize.height, 0.1, 100);
+    // cameraRayo.position.set(-25, 3, 70);
+    // cameraRayo.rotation.y = THREE.Math.degToRad(180);
+    // cameraRayo.rayos = [
+    //     new THREE.Vector3(0, -1, 0)
+    // ]
 
     scene.add(cameraRayo)
 
@@ -712,7 +748,7 @@ function setupScene() {
     cargarModelos();
 
 
-    for (let index = 0; index < 5; index++) {
+    for (let index = 0; index < 3; index++) {
         cargaModelosAnimados();
     }
 
