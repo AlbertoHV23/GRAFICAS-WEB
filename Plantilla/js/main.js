@@ -1,8 +1,33 @@
+//Shaders
+const _VS = ` 
+varying vec3 v_Normal;
+
+void main(){
+    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+    v_Normal = normal;
+}
+`;
+
+const _FS = `  
+uniform vec3 triangleColor;
+
+varying vec3 v_Normal;
+
+void main(){
+    gl_FragColor = vec4(triangleColor, 0.5);
+}
+`;
+
+var totalTime = 0
+var cameraRayo
 var scene;
 var controls;
 var clock;
+var raycaster;
 var deltaTime;
 var keys = {};
+
+var contador = 1
 
 var twoPlayers = false;
 var selectStage = 1;
@@ -11,6 +36,13 @@ var textureStage;
 var pause = false;
 var cameras = [];
 var modelos = [false, false, false, false];
+
+var puntosUno = 0;
+var puntosDos = 0;
+var puntosTres = 0;
+var simon = true
+
+var arregloPersonas = []
 
 var back_day = [
     './assets/skyboxes/day/front.jpg',
@@ -105,20 +137,55 @@ $(document).ready(function () {
 
     }
 
-
-
-    $("#btnSolo").click(function () {
-        quitarInicio();
-        $("#screen").removeClass("twoplayers").addClass("single");
-        $("#screentwo").removeClass("twoplayers").addClass("single");
-        setupScene();
+    $("#btnSingleInputPlay").click(function () {
+        if ($("#nicknameSingleInput").val() != "") {
+            localStorage.setItem('Player1Name', $("#nicknameSingleInput").val());
+            alert("Your nickname is: " + localStorage.getItem('Player1Name'));
+            $('titulo-playerUno').empty();
+            $(".titulo-playerUno").html(localStorage.getItem('Player1Name'));
+            quitarInicio();
+            $("#screen").removeClass("twoplayers").addClass("single");
+            $("#screentwo").removeClass("twoplayers").addClass("single");
+            setupScene();
+        } else {
+            alert("The field is empty");
+        }
     });
 
-    $("#btnMultiplayer").click(function () {
-        quitarInicio();
-        twoPlayers = true;
-        setupScene();
+    $("#btnMultiplayerInputPlay").click(function () {
+        if ($("#playerOneName").val() != "" && $("#playerTwoName").val() != "") {
+            localStorage.setItem('Player1Name', $("#playerOneName").val());
+            localStorage.setItem('Player2Name', $("#playerTwoName").val());
+            alert("Player 1: " + localStorage.getItem('Player1Name') + " Player 2: " + localStorage.getItem('Player2Name'));
+            $('titulo-playerUno').empty();
+            $(".titulo-playerUno").html(localStorage.getItem('Player1Name'));
+            $('titulo-playerDos').empty();
+            $(".titulo-playerDos").html(localStorage.getItem('Player2Name'));
+            quitarInicio();
+            twoPlayers = true;
+            setupScene();
+        } else {
+            alert("Some of the fields are empty");
+        }
     });
+
+    //Elimina solo un elemto
+    // localStorage.removeItem('miGato');
+    // // Elimina todos los elementos
+    // localStorage.clear();
+
+    // $("#btnSolo").click(function () {
+    //     quitarInicio();
+    //     $("#screen").removeClass("twoplayers").addClass("single");
+    //     $("#screentwo").removeClass("twoplayers").addClass("single");
+    //     setupScene();
+    // });
+
+    // $("#btnMultiplayer").click(function () {
+    //     quitarInicio();
+    //     twoPlayers = true;
+    //     setupScene();
+    // });
 
 
 
@@ -136,15 +203,15 @@ function cargarModelos() {
             scene.add(miModelo);
             modelos[0] = true;
         });
-    } else if (selectStage == 2) {
-        cargaObj("assets/models/escenario/city", "The City.obj", "The_City.mtl", (miModelo) => {
-            miModelo.position.set(0, 0, 0);
-            miModelo.rotation.set(THREE.Math.degToRad(-90), THREE.Math.degToRad(0), THREE.Math.degToRad(0));
-            miModelo.name = "escenario"
+        // } else if (selectStage == 2) {
+        //     cargaObj("assets/models/escenario/city", "The City.obj", "The_City.mtl", (miModelo) => {
+        //         miModelo.position.set(0, 0, 0);
+        //         miModelo.rotation.set(THREE.Math.degToRad(-90), THREE.Math.degToRad(0), THREE.Math.degToRad(0));
+        //         miModelo.name = "escenario"
 
-            scene.add(miModelo);
-            modelos[0] = true;
-        });
+        //         scene.add(miModelo);
+        //         modelos[0] = true;
+        //     });
     } else {
         cargaObj("assets/models/escenario/farm/", "combined 2_simplified_3d_mesh.obj", "combined 2_simplified_3d_mesh.mtl", (miModelo) => {
             miModelo.position.set(0, 70, 0);
@@ -168,11 +235,13 @@ function cargarModelos() {
         scene.add(miModelo);
         miModelo.name = "UFO";
         miModelo.add(cone);
+        miModelo.add(cameraRayo);
         modelos[1] = true;
 
     });
 
     if (twoPlayers) {
+
         cargaObj("assets/models/UFO/", "Low_poly_UFO.obj", "Low_poly_UFO.mtl", (miModelo) => {
             miModelo.scale.set(.1, .1, .1);
             miModelo.position.x = 25;
@@ -189,6 +258,9 @@ function cargarModelos() {
         });
     }
 }
+
+var copias = 0
+var copiados = []
 
 function cargaModelosAnimados() {
     var loader = new THREE.FBXLoader()
@@ -213,22 +285,28 @@ function cargaModelosAnimados() {
         // limite z = -176 y 50
         // le damos la posicion que queramos en x y z
 
-        personaje.position.z = Math.floor(Math.random() * -176) + 50
+        personaje.position.z = Math.floor(Math.random() * -176) - 100
         personaje.position.x = Math.floor(Math.random() * -72) + 150
         personaje.position.y = 0
 
+        console.log(personaje.position.z + ' original');
         // le asignamos una escala en x y z
-        personaje.scale.set(.01, .01, .01)
+        personaje.scale.set(.02, .02, .02)
 
         // Le asignamos un nombre al modelo
-        personaje.name = 'persona'
+        personaje.name = 'persona' + contador
 
-        // // Posicion de la luz direccional
-        // directional.lookAt(personaje.position)
 
         // Agregamos el personaje a la escena
         scene.add(personaje)
-        modelos[3] = true;
+        copiados.push(personaje);
+
+        if (contador >= 5) {
+            modelos[3] = true;
+        }
+
+        contador++
+
     })
 }
 
@@ -265,13 +343,18 @@ function onKeyUp(event) {
     keys[String.fromCharCode(event.keyCode)] = false;
 }
 
+
+
 function render() {
     if ((modelos[0] == true && modelos[1] == true && modelos[3] == true) || (modelos[0] == true && modelos[1] == true && modelos[2] == true && modelos[3] == true)) {
         $(".carga").remove();
         $(".screens").removeClass("d-none")
+        $(".datos").removeClass("d-none")
+
     }
 
     $(document).on('keydown', function (event) {
+
         if (event.key == "Escape") {
             beepTransition.play();
             $('#PauseModal').modal('show');
@@ -290,6 +373,15 @@ function render() {
 
     requestAnimationFrame(render);
     deltaTime = clock.getDelta();
+
+    totalTime += deltaTime
+    const v = Math.sin(totalTime * 2.0) * 0.5 + 0.5
+    const c1 = new THREE.Vector3(1, 1, 0)
+    const c2 = new THREE.Vector3(0, 1, 1)
+
+    const cambioColor = c1.lerp(c2, v)
+
+    cone.material.uniforms.triangleColor.value = cambioColor
 
     var yaw = 0;
     var forward = 0;
@@ -315,6 +407,19 @@ function render() {
     } else {
         cone.visible = false;
     }
+
+    if (keys["Z"]) {
+        puntosUno += 1;
+        $(".titulo-playerUnoPuntos").empty();
+        $(".titulo-playerUnoPuntos").html('Puntos: ' + puntosUno);
+    }
+
+    if (keys["X"]) {
+        puntosDos += 1;
+        $(".titulo-playerDosPuntos").empty();
+        $(".titulo-playerDosPuntos").html('Puntos: ' + puntosDos);
+    }
+
 
     var yaw2 = 0;
     var forward2 = 0;
@@ -343,6 +448,7 @@ function render() {
     ufos[0].translateZ(forward * deltaTime);
     ufos[0].translateY(up * deltaTime);
     anclado.position.set(ufos[0].position.x, ufos[0].position.y, ufos[0].position.z);
+
 
     if (twoPlayers) {
 
@@ -376,12 +482,30 @@ function render() {
 
     }
 
-    for (let index = 0; index < 20; index++) {
-        var nombre = "persona" + indiceNombre
-                indiceNombre++
-    }
+    // for (let index = 0; index < 20; index++) {
+    //     var nombre = "persona" + indiceNombre
+    //     indiceNombre++
+    // }
 
-    var persona = scene.getObjectByName("persona");
+    // limite x = -72 y 150
+    // limite z = -176 y 50
+
+    $(".titulo-vivos").html('Alive: ' + copiados.length);
+    copiados.forEach(personas => {
+        var perona = scene.getObjectByName(personas.name)
+        // perona.position.z += 4 * deltaTime;
+
+        if (perona.position.z >= 50) {
+            scene.remove(perona)
+            var indice = copiados.indexOf(perona); // obtenemos el indice
+            copiados.splice(indice, 1);
+            // copiados.shift()
+            $(".titulo-vivos").html('Alive: ' + copiados.length);
+            puntosTres++
+        }
+
+    });
+
     // persona.position.z += 0.03;
 
     // camera.rotation.y += yaw * deltaTime;
@@ -389,19 +513,52 @@ function render() {
     // camera.translateY(up * deltaTime);
 
     for (let index = 0; index < renders.length; index++) {
-        renders[index].render(scene, cameras[index]);
+        // renders[index].render(scene, cameras[index]);
+        renders[index].render(scene, cameraRayo);
     }
 
-    rainGeo.vertices.forEach(p => {
-        p.velocity -= 0.1 + Math.random() * 0.1;
-        p.y += p.velocity;
-        if (p.y < -200) {
-            p.y = 200;
-            p.velocity = 0;
+    if (twoPlayers) {
+        rainGeo.vertices.forEach(p => {
+            p.velocity -= 0.1 + Math.random() * 0.1;
+            p.y += p.velocity;
+            if (p.y < -200) {
+                p.y = 200;
+                p.velocity = 0;
+            }
+        });
+        rainGeo.verticesNeedUpdate = true;
+        rain.rotation.y += 0.002;
+    }
+
+    if (puntosTres == 3 && twoPlayers == false) {
+        puntosTres = 4;
+        //mandar datos de firebase
+        confirm("Game Over")
+        location.reload()
+    } else if (twoPlayers == true && modelos[3]) {
+        if (copiados.length == 0) {
+            confirm("Game Over");
+            // mandamos los datos de que tenga mas puntos
+            location.reload()
         }
-    });
-    rainGeo.verticesNeedUpdate = true;
-    rain.rotation.y += 0.002;
+    }
+
+    for (let index = 0; index < cameraRayo.rayos.length; index++) {
+        var rayo = cameraRayo.rayos[index]
+        raycaster.set(cameraRayo.position, rayo)
+
+        var colision = raycaster.intersectObject(
+            copiados,
+            true
+        )
+
+        if (colision.length > 0) {
+            if (colision[0].distance < 5) {
+                console.log('Colision')
+            }
+        }
+
+    }
 
 }
 
@@ -428,11 +585,12 @@ function crearCamara() {
 
 }
 let cloudParticles = [],
-    flash, rain, rainGeo, rainCount = 1500;
+    flash, rain, rainGeo, rainCount = 700;
 
 function setupScene() {
 
     clock = new THREE.Clock();
+    raycaster = new THREE.Raycaster()
     scene = new THREE.Scene();
 
     crearCamara();
@@ -447,13 +605,21 @@ function setupScene() {
 
     const loader = new THREE.CubeTextureLoader();
 
-    if (selectTexture == 2) {
+    $('selectEscenario').change(function (e) {
+        e.preventDefault();
+        if (twoPlayers == false) {
+            selectStage = $('selectEscenario').val();
+        }
+    });
+
+    if (selectStage == 1 && twoPlayers) {
         textureStage = loader.load(back_night);
-    } else if (selectTexture == 3) {
+    } else if (selectStage == 1 && twoPlayers == false) {
         textureStage = loader.load(back_sunset);
     } else {
         textureStage = loader.load(back_day);
     }
+
 
     scene.background = textureStage;
 
@@ -468,13 +634,32 @@ function setupScene() {
     scene.add(ancla);
 
 
+    cameraRayo = new THREE.PerspectiveCamera(75, visibleSize.width / visibleSize.height, 0.1, 100);
+    cameraRayo.position.set(-25, 3, 70);
+    cameraRayo.rotation.y = THREE.Math.degToRad(180);
+    cameraRayo.rayos = [
+        new THREE.Vector3(0, -1, 0)
+    ]
+
+    scene.add(cameraRayo)
+
     const geometria = new THREE.ConeGeometry(3, 8, 32);
     const materialTrans = new THREE.MeshPhongMaterial({
         color: 0x0af43e,
         opacity: 0.5,
         transparent: true,
     });
-    cone = new THREE.Mesh(geometria, materialTrans);
+
+    var shaderColor = new THREE.ShaderMaterial({
+        uniforms: {
+            triangleColor: {
+                value: new THREE.Vector3(0, 0, 1)
+            }
+        },
+        vertexShader: _VS,
+        fragmentShader: _FS,
+    })
+    cone = new THREE.Mesh(geometria, shaderColor);
     cone.scale.set(6, 6, 6);
     scene.add(cone);
 
@@ -498,32 +683,38 @@ function setupScene() {
         $("#screentwo").append(renders[1].domElement);
     }
 
-    rainGeo = new THREE.Geometry();
-    for (let i = 0; i < rainCount; i++) {
-        rainDrop = new THREE.Vector3(
-            Math.random() * 400 - 100,
-            Math.random() * 500 - 125,
-            Math.random() * 400 - 100
-        );
-        rainDrop.velocity = {};
-        rainDrop.velocity = 0;
-        rainGeo.vertices.push(rainDrop);
-    }
+    if (twoPlayers) {
+        rainGeo = new THREE.Geometry();
+        for (let i = 0; i < rainCount; i++) {
+            rainDrop = new THREE.Vector3(
+                Math.random() * 400 - 100,
+                Math.random() * 500 - 125,
+                Math.random() * 400 - 100
+            );
+            rainDrop.velocity = {};
+            rainDrop.velocity = 0;
+            rainGeo.vertices.push(rainDrop);
+        }
 
-    rainMaterial = new THREE.PointsMaterial({
-        color: 0xaaaaaa,
-        size: 0.5,
-        transparent: true
-    });
-    rain = new THREE.Points(rainGeo, rainMaterial);
-    scene.add(rain);
+        rainMaterial = new THREE.PointsMaterial({
+            color: 0xaaaaaa,
+            size: 0.5,
+            transparent: true
+        });
+
+        rain = new THREE.Points(rainGeo, rainMaterial);
+        scene.add(rain);
+    }
 
     document.addEventListener('keydown', onKeyDown);
     document.addEventListener('keyup', onKeyUp);
 
     cargarModelos();
 
-    cargaModelosAnimados();
+
+    for (let index = 0; index < 5; index++) {
+        cargaModelosAnimados();
+    }
 
     render();
 }
